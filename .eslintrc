@@ -1,0 +1,13 @@
+{
+  "extends": "airbnb",
+  "rules": {
+    // disable requiring trailing commas because it might be nice to revert to
+    // being JSON at some point, and I don't want to make big changes now.
+    "strict": [0, "global"],
+    "comma-dangle": 0
+  },
+  "env": {
+    "mocha": true,
+    "node": true
+  }
+}

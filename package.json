@@ -1,0 +1,35 @@
+{
+  "name": "can-i",
+  "version": "0.1.0",
+  "description": "An independent service, that provides a REST API (JSON) to define and manage a RBAC system.",
+  "main": "boot.js",
+  "scripts": {
+    "start": "./node_modules/forever/bin/forever server.js",
+    "test": "NODE_ENV=test node test/init.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bluebird": "3.1.1",
+    "body-parser": "1.14.1",
+    "compression": "1.6.0",
+    "expect": "1.13.4",
+    "express": "4.13.3",
+    "forever": "0.15.1",
+    "joi": "7.2.0",
+    "jsonwebtoken": "5.4.1",
+    "mailgun-js": "0.7.4",
+    "mongodb": "2.1.4",
+    "morgan": "1.6.1",
+    "supertest": "1.1.0",
+    "throw.js": "1.0.0",
+    "winston": "2.1.0",
+    "winston-daily-rotate-file": "1.0.1"
+  },
+  "devDependencies": {
+    "eslint": "1.10.3",
+    "eslint-config-airbnb": "3.1.0",
+    "eslint-plugin-react": "3.15.0",
+    "should": "8.1.1"
+  }
+}
