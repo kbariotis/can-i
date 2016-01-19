@@ -3,7 +3,7 @@
 const request = require('supertest');
 const expect = require('should');
 
-describe('Resources', () => {
+describe('Permissions', () => {
   let roleId;
   let resourceId;
 
@@ -61,6 +61,26 @@ describe('Resources', () => {
       });
   });
 
+  it('Fails to Allow User to Access Admin Area (passed in the body)', (done) => {
+    request('http://localhost:3001')
+      .post('/v1/permissions/' + 'unknown_role')
+      .send([resourceId])
+      .expect(404)
+      .end((err, res) => {
+        done(err);
+      });
+  });
+
+  it('Fails to Allow User to Access Admin Area (passed in the body)', (done) => {
+    request('http://localhost:3001')
+      .post('/v1/permissions/' + roleId)
+      .send(['unknown_resource_id'])
+      .expect(404)
+      .end((err, res) => {
+        done(err);
+      });
+  });
+
   it('Disallow User to Access Admin Area (passed in the body)', (done) => {
     request('http://localhost:3001')
       .delete('/v1/permissions/' + roleId)
@@ -74,7 +94,7 @@ describe('Resources', () => {
   after((done) => {
     request('http://localhost:3001')
       .delete('/v1/roles/' + roleId)
-      .expect(201)
+      .expect(200)
       .end((err, res) => {
         request('http://localhost:3001')
           .delete('/v1/resources/' + resourceId)

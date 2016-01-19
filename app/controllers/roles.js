@@ -1,9 +1,11 @@
 'use strict';
 
 const Joi = require('Joi');
-const mongo = require('../lib/db');
-const throwjs = require('throw.js');
+const RolesService = require('../services/roles');
 
+/**
+ * Get the specific Role
+ */
 module.exports.getOne = (req, res, next) => {
   Joi.validate(
     req.params,
@@ -14,38 +16,25 @@ module.exports.getOne = (req, res, next) => {
       if (validationErr) {
         next(validationErr);
       } else {
-        mongo.get().collection('roles')
-          .findOne(
-          {
-            _id: params.id
-          },
-          (findErr, model) => {
-            if (findErr) {
-              next(findErr);
-            } else {
-              if (!model) {
-                next(new throwjs.notFound());
-              } else {
-                res.json(model);
-              }
-            }
-          });
+        RolesService.getOne(params.id)
+          .then((results) => res.json(results))
+          .catch(next);
       }
     });
 };
 
+/**
+ * Get all Resources
+ */
 module.exports.get = (req, res, next) => {
-  mongo.get().collection('roles')
-    .find({})
-    .toArray((err, data) => {
-      if (err) {
-        next(err);
-      } else {
-        res.json(data);
-      }
-    });
+  RolesService.getAll()
+    .then((data) => res.json(data))
+    .catch(next);
 };
 
+/**
+ * Create a new Role
+ */
 module.exports.post = (req, res, next) => {
   Joi.validate(
     req.body,
@@ -57,18 +46,16 @@ module.exports.post = (req, res, next) => {
       if (validationErr) {
         next(validationErr);
       } else {
-        mongo.get().collection('roles')
-          .insert(body, (insertErr) => {
-            if (insertErr) {
-              next(insertErr);
-            } else {
-              res.status(201).json(body);
-            }
-          });
+        RolesService.create(body)
+          .then((data) => res.status(201).json(data))
+          .catch(next);
       }
     });
 };
 
+/**
+ * Update Role
+ */
 module.exports.put = (req, res, next) => {
   Joi.validate(
     req.params,
@@ -88,42 +75,18 @@ module.exports.put = (req, res, next) => {
             if (validationErr) {
               next(validationErr);
             } else {
-              mongo.get().collection('roles')
-                .findOne({
-                  _id: params.id
-                }, (findOneErr, model) => {
-                  if (findOneErr) {
-                    next(findOneErr);
-                  } else {
-                    if (!model) {
-                      next(new throwjs.notFound());
-                    } else {
-                      mongo.get().collection('roles')
-                        .update(
-                        {
-                          _id: params.id
-                        },
-                        {
-                          name: body.name
-                        },
-                        (updateErr) => {
-                          if (updateErr) {
-                            next(updateErr);
-                          } else {
-                            const role = model;
-                            role.name = body.name;
-                            res.status(200).json(role);
-                          }
-                        });
-                    }
-                  }
-                });
+              RolesService.update(params.id, body)
+                .then((data) => res.json(data))
+                .catch(next);
             }
           });
       }
     });
 };
 
+/**
+ * Delete the specific Role
+ */
 module.exports.del = (req, res, next) => {
   Joi.validate(
     req.params,
@@ -134,31 +97,9 @@ module.exports.del = (req, res, next) => {
       if (validationErr) {
         next(validationErr);
       } else {
-        mongo.get().collection('roles')
-          .findOne({
-            _id: params.id
-          }, (findOneErr, model) => {
-            if (findOneErr) {
-              next(findOneErr);
-            } else {
-              if (!model) {
-                next(new throwjs.notFound());
-              } else {
-                mongo.get().collection('roles')
-                  .remove(
-                  {
-                    _id: params.id
-                  },
-                  (removeErr) => {
-                    if (removeErr) {
-                      next(removeErr);
-                    } else {
-                      res.json({});
-                    }
-                  });
-              }
-            }
-          });
+        RolesService.remove(params.id)
+          .then((data) => res.json(data))
+          .catch(next);
       }
     });
 };

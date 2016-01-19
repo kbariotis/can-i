@@ -1,9 +1,11 @@
 'use strict';
 
 const Joi = require('Joi');
-const mongo = require('../lib/db');
-const throwjs = require('throw.js');
+const ResourcesService = require('../services/resources');
 
+/**
+ * Get the specific Resource
+ */
 module.exports.getOne = (req, res, next) => {
   Joi.validate(
     req.params,
@@ -14,38 +16,25 @@ module.exports.getOne = (req, res, next) => {
       if (validationErr) {
         next(validationErr);
       } else {
-        mongo.get().collection('resources')
-          .findOne(
-          {
-            _id: params.id
-          },
-          (findErr, model) => {
-            if (findErr) {
-              next(findErr);
-            } else {
-              if (!model) {
-                next(new throwjs.notFound());
-              } else {
-                res.json(model);
-              }
-            }
-          });
+        ResourcesService.getOne(params.id)
+          .then((results) => res.json(results))
+          .catch(next);
       }
     });
 };
 
+/**
+ * Get all Resources
+ */
 module.exports.get = (req, res, next) => {
-  mongo.get().collection('resources')
-    .find({})
-    .toArray((err, data) => {
-      if (err) {
-        next(err);
-      } else {
-        res.json(data);
-      }
-    });
+  ResourcesService.getAll()
+    .then((results) => res.json(results))
+    .catch(next);
 };
 
+/**
+ * Create a new Resource
+ */
 module.exports.post = (req, res, next) => {
   Joi.validate(
     req.body,
@@ -57,18 +46,16 @@ module.exports.post = (req, res, next) => {
       if (validationErr) {
         next(validationErr);
       } else {
-        mongo.get().collection('resources')
-          .insert(body, (insertErr) => {
-            if (insertErr) {
-              next(insertErr);
-            } else {
-              res.status(201).json(body);
-            }
-          });
+        ResourcesService.create(body)
+          .then((results) => res.status(201).json(results))
+          .catch(next);
       }
     });
 };
 
+/**
+ * Update Resource
+ */
 module.exports.put = (req, res, next) => {
   Joi.validate(
     req.params,
@@ -88,42 +75,18 @@ module.exports.put = (req, res, next) => {
             if (validationErr) {
               next(validationErr);
             } else {
-              mongo.get().collection('resources')
-                .findOne({
-                  _id: params.id
-                }, (findOneErr, model) => {
-                  if (findOneErr) {
-                    next(findOneErr);
-                  } else {
-                    if (!model) {
-                      next(new throwjs.notFound());
-                    } else {
-                      mongo.get().collection('resources')
-                        .update(
-                        {
-                          _id: params.id
-                        },
-                        {
-                          name: body.name
-                        },
-                        (updateErr) => {
-                          if (updateErr) {
-                            next(updateErr);
-                          } else {
-                            const resource = model;
-                            resource.name = body.name;
-                            res.status(200).json(resource);
-                          }
-                        });
-                    }
-                  }
-                });
+              ResourcesService.update(params.id, body)
+                .then((results) => res.json(results))
+                .catch(next);
             }
           });
       }
     });
 };
 
+/**
+ * Delete the specific Resource
+ */
 module.exports.del = (req, res, next) => {
   Joi.validate(
     req.params,
@@ -134,31 +97,9 @@ module.exports.del = (req, res, next) => {
       if (validationErr) {
         next(validationErr);
       } else {
-        mongo.get().collection('resources')
-          .findOne({
-            _id: params.id
-          }, (findOneErr, model) => {
-            if (findOneErr) {
-              next(findOneErr);
-            } else {
-              if (!model) {
-                next(new throwjs.notFound());
-              } else {
-                mongo.get().collection('resources')
-                  .remove(
-                  {
-                    _id: params.id
-                  },
-                  (removeErr) => {
-                    if (removeErr) {
-                      next(removeErr);
-                    } else {
-                      res.json({});
-                    }
-                  });
-              }
-            }
-          });
+        ResourcesService.remove(params.id)
+          .then((results) => res.json(results))
+          .catch(next);
       }
     });
 };

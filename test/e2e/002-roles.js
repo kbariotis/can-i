@@ -32,6 +32,16 @@ describe('Roles', () => {
       });
   });
 
+  it('Deny posting a duplicated Role', (done) => {
+    request('http://localhost:3001')
+      .post('/v1/roles')
+      .send({
+        _id: 'user',
+        name: 'User'
+      })
+      .expect(409, done);
+  });
+
   it('Get One', (done) => {
     request('http://localhost:3001')
       .get('/v1/roles/' + id)

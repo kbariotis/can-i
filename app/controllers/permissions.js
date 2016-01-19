@@ -4,7 +4,12 @@ const Joi = require('Joi');
 const mongo = require('../lib/db');
 const throwjs = require('throw.js');
 const BPromise = require('bluebird');
+const RolesService = require('../services/roles');
+const ResourcesService = require('../services/resources');
 
+/**
+ * Get allowed Resources for a given Role
+ */
 module.exports.getAllowedPermissions = (req, res, next) => {
   Joi.validate(
     req.params,
@@ -15,22 +20,29 @@ module.exports.getAllowedPermissions = (req, res, next) => {
       if (validationErr) {
         next(validationErr);
       } else {
-        mongo.get().collection('permissions')
-          .find(
-          {
-            role_id: params.roleId
-          },
-          (findErr, data) => {
-            if (findErr) {
-              next(findErr);
-            } else {
-              res.json(data);
-            }
-          });
+        RolesService.getOne(params.id)
+          .then((role) => {
+            mongo.get().collection('permissions')
+              .find(
+              {
+                role_id: role._id
+              },
+              (findResourcesErr, resources) => {
+                if (findResourcesErr) {
+                  next(findResourcesErr);
+                } else {
+                  res.json(resources);
+                }
+              });
+          })
+          .catch(next);
       }
     });
 };
 
+/**
+ * Determine if the given Role has access to the specific Resource
+ */
 module.exports.isAllowed = (req, res, next) => {
   Joi.validate(
     req.params,
@@ -63,6 +75,9 @@ module.exports.isAllowed = (req, res, next) => {
     });
 };
 
+/**
+ * Allow a Role to have access to specific Resources
+ */
 module.exports.allow = (req, res, next) => {
   Joi.validate(
     req.params,
@@ -75,19 +90,26 @@ module.exports.allow = (req, res, next) => {
         next(validationErr);
       } else {
         if (params.resourceId) {
-          mongo.get().collection('permissions')
-            .insert(
-            {
-              role_id: params.roleId,
-              resource_id: params.resourceId
-            },
-            (insertErr) => {
-              if (insertErr) {
-                next(insertErr);
-              } else {
-                res.json();
-              }
-            });
+          BPromise.join(
+            RolesService.getOne(params.roleId),
+            ResourcesService.getOne(params.resourceId)
+          )
+            .spread((role, resource) => {
+              mongo.get().collection('permissions')
+                .insert(
+                {
+                  role_id: role._id,
+                  resource_id: resource._id
+                },
+                (insertErr) => {
+                  if (insertErr) {
+                    next(insertErr);
+                  } else {
+                    res.json();
+                  }
+                });
+            })
+            .catch(next);
         } else {
           Joi.validate(
             req.body,
@@ -96,31 +118,30 @@ module.exports.allow = (req, res, next) => {
               if (bodyValidationErr) {
                 next(bodyValidationErr);
               } else {
-                BPromise
-                  .map(body, (resourceId) => {
+                RolesService.getOne(params.roleId)
+                  .then(() => {
+                    return BPromise
+                      .map(body, ResourcesService.getOne);
+                  })
+                  .each((resource) => {
                     return new BPromise((resolve, reject) => {
                       mongo.get().collection('permissions')
                         .insert(
                         {
                           role_id: params.roleId,
-                          resource_id: resourceId
+                          resource_id: resource._id
                         },
                         (removeErr) => {
                           if (removeErr) {
                             reject(removeErr);
                           } else {
-                            resolve();
+                            res.json({});
                           }
                         }
                       );
                     });
                   })
-                  .then(() => {
-                    res.json();
-                  })
-                  .catch((err) => {
-                    next(err);
-                  });
+                  .catch(next);
               }
             });
         }
@@ -128,6 +149,9 @@ module.exports.allow = (req, res, next) => {
     });
 };
 
+/**
+ * Revoke access from Role to the specific Resources
+ */
 module.exports.disallow = (req, res, next) => {
   Joi.validate(
     req.params,
@@ -140,19 +164,26 @@ module.exports.disallow = (req, res, next) => {
         next(validationErr);
       } else {
         if (params.resourceId) {
-          mongo.get().collection('permissions')
-            .remove(
-            {
-              role_id: params.roleId,
-              resource_id: params.resourceId
-            },
-            (removeErr) => {
-              if (removeErr) {
-                next(removeErr);
-              } else {
-                res.json();
-              }
-            });
+          BPromise.join(
+            RolesService.getOne(params.roleId),
+            ResourcesService.getOne(params.resourceId)
+          )
+            .spread((role, resource) => {
+              mongo.get().collection('permissions')
+                .remove(
+                {
+                  role_id: role._id,
+                  resource_id: resource._id
+                },
+                (removeErr) => {
+                  if (removeErr) {
+                    next(removeErr);
+                  } else {
+                    res.json({});
+                  }
+                });
+            })
+            .catch(next);
         } else {
           Joi.validate(
             req.body,
@@ -161,22 +192,30 @@ module.exports.disallow = (req, res, next) => {
               if (bodyValidationErr) {
                 next(bodyValidationErr);
               } else {
-                mongo.get().collection('permissions')
-                  .remove(
-                  {
-                    role_id: params.roleId,
-                    resource_id: {
-                      $in: body
-                    }
-                  },
-                  (removeErr) => {
-                    if (removeErr) {
-                      next(removeErr);
-                    } else {
-                      res.json();
-                    }
-                  }
-                );
+                RolesService.getOne(params.roleId)
+                  .then(() => {
+                    return BPromise
+                      .map(body, ResourcesService.getOne);
+                  })
+                  .then(() => {
+                    mongo.get().collection('permissions')
+                      .remove(
+                      {
+                        role_id: params.roleId,
+                        resource_id: {
+                          $in: body
+                        }
+                      },
+                      (removeErr) => {
+                        if (removeErr) {
+                          next(removeErr);
+                        } else {
+                          res.json({});
+                        }
+                      }
+                    );
+                  })
+                  .catch(next);
               }
             });
         }
