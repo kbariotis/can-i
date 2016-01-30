@@ -4,7 +4,7 @@
   "description": "An independent service, that provides a REST API (JSON) to define and manage a RBAC system.",
   "main": "boot.js",
   "scripts": {
-    "start": "./node_modules/forever/bin/forever server.js",
+    "start": "./node_modules/forever/bin/forever boot.js",
     "test": "NODE_ENV=test node test/init.js"
   },
   "author": "",
@@ -30,6 +30,7 @@
     "eslint": "1.10.3",
     "eslint-config-airbnb": "3.1.0",
     "eslint-plugin-react": "3.15.0",
+    "mocha": "2.4.5",
     "should": "8.1.1"
   }
 }
