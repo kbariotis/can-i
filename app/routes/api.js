@@ -4,28 +4,31 @@ const express = require('express');
 const router = express.Router();
 const logger = require('../lib/logger');
 const throwjs = require('throw.js');
+const roles = require('../controllers/roles');
+const resources = require('../controllers/resources');
+const permissions = require('../controllers/permissions');
 
 router
-  .get('/v1/roles/:id', require('../controllers/roles').getOne)
-  .get('/v1/roles', require('../controllers/roles').get)
-  .post('/v1/roles', require('../controllers/roles').post)
-  .post('/v1/roles/:id', require('../controllers/roles').put)
-  .delete('/v1/roles/:id', require('../controllers/roles').del);
+  .get('/v1/roles/:id', roles.getOne)
+  .get('/v1/roles', roles.get)
+  .post('/v1/roles', roles.post)
+  .post('/v1/roles/:id', roles.put)
+  .delete('/v1/roles/:id', roles.del);
 
 router
-  .get('/v1/resources/:id', require('../controllers/resources').getOne)
-  .get('/v1/resources', require('../controllers/resources').get)
-  .post('/v1/resources', require('../controllers/resources').post)
-  .post('/v1/resources/:id', require('../controllers/resources').put)
-  .delete('/v1/resources/:id', require('../controllers/resources').del);
+  .get('/v1/resources/:id', resources.getOne)
+  .get('/v1/resources', resources.get)
+  .post('/v1/resources', resources.post)
+  .post('/v1/resources/:id', resources.put)
+  .delete('/v1/resources/:id', resources.del);
 
 router
-  .get('/v1/permissions/:roleId', require('../controllers/permissions').getAllowedPermissions)
-  .get('/v1/permissions/:roleId/:resourceId', require('../controllers/permissions').isAllowed)
-  .post('/v1/permissions/:roleId/:resourceId', require('../controllers/permissions').allow)
-  .post('/v1/permissions/:roleId/', require('../controllers/permissions').allow)
-  .delete('/v1/permissions/:roleId/:resourceId', require('../controllers/permissions').disallow)
-  .delete('/v1/permissions/:roleId', require('../controllers/permissions').disallow);
+  .get('/v1/permissions/:roleId', permissions.getAllowedPermissions)
+  .get('/v1/permissions/:roleId/:resourceId', permissions.isAllowed)
+  .post('/v1/permissions/:roleId/:resourceId', permissions.allow)
+  .post('/v1/permissions/:roleId/', permissions.allow)
+  .delete('/v1/permissions/:roleId/:resourceId', permissions.disallow)
+  .delete('/v1/permissions/:roleId', permissions.disallow);
 
 router
   .use('*', (req, res, next) => {
